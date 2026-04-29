@@ -1,61 +1,85 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
+import { useState } from "react";
+import { MobileNavDrawer } from "@/components/MobileNavDrawer";
 
+const NAV_LINKS = [
+  { href: "/layout", label: "Layouts" },
+  { href: "/frame", label: "Frames" },
+  { href: "/#about", label: "About" },
+] as const;
+
+/**
+ * Sticky top header with responsive navigation. Mobile (<md) gets a
+ * hamburger that opens a slide-in drawer; tablet+ shows inline links.
+ */
 export function Header() {
+  const [open, setOpen] = useState<boolean>(false);
+
   return (
     <header className="sticky top-0 z-30 backdrop-blur-md">
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-4 sm:px-5 py-3 sm:py-4">
-        <Link href="/" className="flex items-center gap-2">
-          <div className="grid h-8 w-8 place-items-center rounded-2xl bg-gradient-to-br from-rose-500 to-plum-600 text-white shadow-soft">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-              <rect
-                x="3"
-                y="6"
-                width="18"
-                height="13"
-                rx="2.5"
-                stroke="white"
-                strokeWidth="1.6"
-              />
-              <circle cx="12" cy="12.5" r="3.4" stroke="white" strokeWidth="1.6" />
-              <rect x="8" y="3.5" width="8" height="3.5" rx="1.2" fill="white" />
-            </svg>
-          </div>
-          <span className="font-display text-2xl italic font-light tracking-tight">
-            Takaphotobooth
-          </span>
+      <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-3 px-3 py-2 sm:px-5 sm:py-3">
+        <Link
+          href="/"
+          className="flex shrink-0 items-center gap-2"
+          aria-label="Taka photobooth — home"
+        >
+          <Image
+            src="/logo-256.png"
+            alt="Taka photobooth"
+            width={220}
+            height={165}
+            priority
+            className="h-12 w-auto sm:h-14 lg:h-16"
+          />
+          <span className="sr-only">Taka photobooth</span>
         </Link>
 
-        <nav className="hidden items-center gap-6 text-sm text-ink/70 md:flex">
-          <Link href="/layout" className="hover:text-ink">
-            Layouts
-          </Link>
-          <Link href="/frame" className="hover:text-ink">
-            Frames
-          </Link>
-          <a
-            href="#about"
-            className="hover:text-ink"
-          >
-            About
-          </a>
+        {/* Desktop / tablet inline nav */}
+        <nav
+          aria-label="Primary"
+          className="hidden items-center gap-6 text-sm text-ink/70 md:flex"
+        >
+          {NAV_LINKS.map((l) => (
+            <Link key={l.href} href={l.href} className="hover:text-ink">
+              {l.label}
+            </Link>
+          ))}
           <Link
             href="/layout"
-            className="rounded-full bg-ink px-4 py-2 font-medium text-cream hover:opacity-90"
+            className="rounded-full bg-ink px-4 py-2 font-medium text-cream transition hover:opacity-90"
           >
             Start a strip
           </Link>
         </nav>
 
-        {/* Mobile CTA */}
-        <Link
-          href="/layout"
-          className="md:hidden rounded-full bg-ink px-3 py-1.5 text-xs font-medium text-cream"
+        {/* Mobile hamburger */}
+        <button
+          type="button"
+          aria-label="Open menu"
+          aria-expanded={open}
+          aria-controls="mobile-nav"
+          onClick={() => setOpen(true)}
+          className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-ink/5 text-ink transition hover:bg-ink/10 md:hidden"
         >
-          Start
-        </Link>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden>
+            <path
+              d="M4 7h16M4 12h16M4 17h16"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+            />
+          </svg>
+        </button>
       </div>
+
+      <MobileNavDrawer
+        open={open}
+        onClose={() => setOpen(false)}
+        links={NAV_LINKS}
+      />
     </header>
   );
 }

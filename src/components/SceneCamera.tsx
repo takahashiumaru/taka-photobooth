@@ -45,7 +45,13 @@ export const SceneCamera = forwardRef<SceneCameraHandle, Props>(function SceneCa
   );
   const [errMsg, setErrMsg] = useState<string | null>(null);
 
-  const { ready: segReady, segment } = useSegmentation(bgRemoval);
+  const {
+    ready: segReady,
+    error: segError,
+    loading: segLoading,
+    retry: segRetry,
+    segment,
+  } = useSegmentation(bgRemoval);
 
   // Camera lifecycle
   useEffect(() => {
@@ -240,10 +246,31 @@ export const SceneCamera = forwardRef<SceneCameraHandle, Props>(function SceneCa
           )}
         </div>
       )}
-      {/* Loading segmenter */}
-      {bgRemoval && permState === "granted" && !segReady && (
-        <div className="absolute left-4 top-4 rounded-full bg-black/55 px-3 py-1.5 text-xs font-semibold text-white backdrop-blur-md">
-          Loading background remover…
+      {/* Loading segmenter — first load can take 10–30s on mobile data */}
+      {bgRemoval && permState === "granted" && segLoading && !segError && (
+        <div className="absolute left-3 right-3 top-3 rounded-2xl bg-ink/85 p-3 text-[11px] font-medium text-cream shadow-soft backdrop-blur-md">
+          <div className="mb-0.5 font-bold uppercase tracking-wider">
+            Loading background remover…
+          </div>
+          <p className="leading-snug opacity-80">
+            First load downloads ~3 MB. On mobile it can take 10–30 seconds.
+          </p>
+        </div>
+      )}
+      {/* Segmenter error with retry (e.g. iOS WebGL / slow network) */}
+      {bgRemoval && segError && (
+        <div className="absolute left-3 right-3 top-3 rounded-2xl bg-rose-500/95 p-3 text-[11px] font-medium text-white shadow-soft backdrop-blur-md">
+          <div className="mb-1 font-bold uppercase tracking-wider">
+            Background remover unavailable
+          </div>
+          <p className="mb-2 leading-snug">{segError}</p>
+          <button
+            type="button"
+            onClick={segRetry}
+            className="rounded-full bg-white/20 px-3 py-1 font-semibold text-white transition hover:bg-white/30"
+          >
+            Try again
+          </button>
         </div>
       )}
     </>

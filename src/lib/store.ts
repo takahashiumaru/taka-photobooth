@@ -1,10 +1,46 @@
 "use client";
 
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { createJSONStorage, persist } from "zustand/middleware";
 import type { CapturedPhoto } from "./types";
 
 type StepNumber = 1 | 2 | 3 | 4 | 5;
+
+export type Screen =
+  | "home"
+  | "layout"
+  | "size"
+  | "camera"
+  | "frame"
+  | "result";
+
+const SCREEN_TO_PATH: Record<Screen, string> = {
+  home: "/",
+  layout: "/layout/",
+  size: "/size/",
+  camera: "/camera/",
+  frame: "/frame/",
+  result: "/result/",
+};
+
+const PATH_TO_SCREEN: Record<string, Screen> = {
+  "/": "home",
+  "": "home",
+  "/layout": "layout",
+  "/size": "size",
+  "/camera": "camera",
+  "/frame": "frame",
+  "/result": "result",
+};
+
+export function pathToScreen(p: string): Screen {
+  const norm = p.replace(/\/index\.html$/, "").replace(/\/+$/, "") || "/";
+  return PATH_TO_SCREEN[norm] ?? "home";
+}
+
+export function screenToPath(s: Screen): string {
+  return SCREEN_TO_PATH[s];
+}
 
 export type CustomBgMode = "transparent" | "solid" | "gradient" | "image";
 
@@ -26,11 +62,13 @@ interface PhotoBoothState {
   filter: string; // CSS filter applied during capture preview
   countdown: 3 | 5 | 10 | 0;
   step: StepNumber;
+  screen: Screen;
   customBg: CustomBg;
   bgRemoval: boolean;
   sceneId: string;
   customSceneImage: string | null;
 
+  goTo: (screen: Screen) => void;
   setLayout: (id: string) => void;
   setSize: (id: string) => void;
   addPhoto: (p: CapturedPhoto) => void;
@@ -59,6 +97,7 @@ export const usePhotoBooth = create<PhotoBoothState>()(
       filter: "none",
       countdown: 3,
       step: 1,
+      screen: "home",
       customBg: {
         mode: "transparent",
         color1: "#FFE0EC",
@@ -70,6 +109,16 @@ export const usePhotoBooth = create<PhotoBoothState>()(
       bgRemoval: false,
       sceneId: "studio-cream",
       customSceneImage: null,
+      goTo: (screen) => {
+        set({ screen });
+        if (typeof window !== "undefined") {
+          const targetPath = screenToPath(screen);
+          if (window.location.pathname !== targetPath) {
+            window.history.pushState({ screen }, "", targetPath);
+          }
+          window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
+        }
+      },
       setLayout: (id) => set({ layoutId: id, step: 2 }),
       setSize: (id) => set({ sizeId: id, step: 3 }),
       addPhoto: (p) =>
@@ -94,24 +143,34 @@ export const usePhotoBooth = create<PhotoBoothState>()(
           photos: [],
           frameId: "ivory",
           step: 1,
+          screen: "home",
           filter: "none",
         }),
     }),
     {
       name: "takaphotobooth-store",
-      // Don't persist photos to avoid quota issues
+      // sessionStorage so photos survive page reloads / route fallbacks
+      // (the deploy host occasionally serves the wrong HTML for deep links,
+      // forcing a hard navigation). Photos and uploaded images are kept in
+      // memory of the current tab only.
+      storage: createJSONStorage(() =>
+        typeof window !== "undefined"
+          ? window.sessionStorage
+          : (undefined as unknown as Storage)
+      ),
       partialize: (s) => ({
         layoutId: s.layoutId,
         sizeId: s.sizeId,
+        photos: s.photos,
         frameId: s.frameId,
         mirror: s.mirror,
         countdown: s.countdown,
         filter: s.filter,
-        // Persist custom bg config but not the uploaded image dataURL
-        // (could exceed localStorage quota).
-        customBg: { ...s.customBg, image: null },
+        customBg: s.customBg,
         bgRemoval: s.bgRemoval,
         sceneId: s.sceneId,
+        customSceneImage: s.customSceneImage,
+        step: s.step,
       }),
     }
   )

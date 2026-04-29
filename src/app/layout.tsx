@@ -17,9 +17,17 @@ const fraunces = Fraunces({
 });
 
 export const metadata: Metadata = {
-  title: "Takaphotobooth — Premium Photobooth in your browser",
+  title: "Taka photobooth — Premium Photobooth in your browser",
   description:
     "A modern, in-browser photobooth. Pick a layout, snap your shots, choose a frame, and download a print-ready memory.",
+  icons: {
+    icon: [
+      { url: "/favicon.png", type: "image/png" },
+      { url: "/logo-128.png", sizes: "128x128", type: "image/png" },
+      { url: "/logo-256.png", sizes: "256x256", type: "image/png" },
+    ],
+    apple: "/logo-256.png",
+  },
 };
 
 export const viewport: Viewport = {

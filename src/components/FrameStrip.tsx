@@ -53,7 +53,7 @@ export function FrameStrip({
       : 16;
 
   const titleText = layout.stripTitle ?? "Takaphotobooth";
-  const tagText = `${new Date().getFullYear()} · ${layout.inchW}×${layout.inchH}`;
+  const tagText = `${new Date().getFullYear()}`;
   const availableW = Math.max(40, width - 2 * pad);
   // Italic Fraunces avg ≈ 0.45em, uppercase Plus Jakarta tracking 0.16em ≈ 0.62em.
   // Estimate widths at base sizes; if both fit one line, render side-by-side; else stack.
@@ -141,7 +141,11 @@ export function FrameStrip({
               key={i}
               className="relative overflow-hidden"
               style={{
-                background: url ? "#000" : "rgba(0,0,0,0.06)",
+                background: url
+                  ? "#000"
+                  : sample
+                    ? "rgba(0,0,0,0.10)"
+                    : "rgba(0,0,0,0.06)",
                 border: frame.cellBorder,
                 borderRadius: cellRadius,
                 gridColumn: `span 1 / span 1`,

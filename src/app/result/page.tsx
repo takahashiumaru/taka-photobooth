@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Header } from "@/components/Header";
 import { Stepper } from "@/components/Stepper";
@@ -10,6 +10,8 @@ import { FrameStrip } from "@/components/FrameStrip";
 import { usePhotoBooth } from "@/lib/store";
 import { HydrationGate } from "@/components/HydrationGate";
 import { renderStrip } from "@/lib/render";
+import type { LayoutDef, FrameDef, CapturedPhoto } from "@/lib/types";
+import type { CustomBg } from "@/lib/store";
 
 export default function ResultPage() {
   return (
@@ -109,16 +111,18 @@ function Inner() {
   return (
     <>
       <Header />
-      <main className="mx-auto max-w-6xl px-5 pb-20 pt-2">
-        <div className="py-6">
+      <main className="mx-auto max-w-6xl px-3 sm:px-5 pb-20 pt-2">
+        <div className="py-3 sm:py-6">
           <Stepper current={5} />
         </div>
 
-        <div className="mb-8 text-center">
-          <span className="eyebrow">Step 5 of 5</span>
-          <h1 className="display-h2 mt-2">Your strip is ready</h1>
-          <p className="mx-auto mt-2 max-w-md text-sm text-ink/60">
-            Print quality 300 DPI. Download as JPG or PNG, or keep tweaking.
+        <div className="mb-5 sm:mb-8 text-center px-3">
+          <span className="eyebrow text-[10px] sm:text-xs">Step 5 of 5</span>
+          <h1 className="display-h2 mt-3 sm:mt-4 text-[28px] sm:text-5xl leading-[1.1]">
+            Your strip is ready
+          </h1>
+          <p className="mx-auto mt-2 sm:mt-3 max-w-[20rem] sm:max-w-md text-[13px] sm:text-sm leading-relaxed text-ink/60">
+            Print quality 300 DPI. Download as JPG or PNG.
           </p>
         </div>
 
@@ -126,15 +130,12 @@ function Inner() {
           {/* Hero preview */}
           <div className="relative">
             <div className="absolute -inset-6 -z-10 rounded-[60px] bg-gradient-to-br from-rose-200/60 via-white/40 to-plum-200/60 blur-2xl" />
-            <div className="flex items-center justify-center">
-              <FrameStrip
-                layout={layout}
-                frame={frame}
-                photos={photos.map((p) => p.dataUrl)}
-                height={layout.kind === "strip" ? 620 : 440}
-                customBg={customBg}
-              />
-            </div>
+            <FluidResultStrip
+              layout={layout}
+              frame={frame}
+              photos={photos}
+              customBg={customBg}
+            />
             {thumb && (
               <div className="mt-4 flex items-center justify-center text-xs text-ink/45">
                 Print-ready · {layout.inchW}″ × {layout.inchH}″ @ 300 DPI
@@ -213,5 +214,66 @@ function Inner() {
         </div>
       </main>
     </>
+  );
+}
+
+interface FluidResultStripProps {
+  layout: LayoutDef;
+  frame: FrameDef;
+  photos: CapturedPhoto[];
+  customBg: CustomBg;
+}
+
+/**
+ * Renders the final hero strip preview at a height that always fits the
+ * parent column. Uses a ResizeObserver so portrait strips (2×6) stay tall
+ * while square 6×6 grids never overflow the container on narrow phones.
+ */
+function FluidResultStrip({
+  layout,
+  frame,
+  photos,
+  customBg,
+}: FluidResultStripProps) {
+  const wrapRef = useRef<HTMLDivElement | null>(null);
+  const [containerWidth, setContainerWidth] = useState<number>(0);
+
+  useEffect(() => {
+    const el = wrapRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver((entries) => {
+      for (const e of entries) {
+        const w = e.contentRect.width;
+        if (w > 0) setContainerWidth(w);
+      }
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  const aspect = layout.inchW / layout.inchH;
+  const desktopMax = layout.kind === "strip" ? 620 : 440;
+  const heightFromWidth =
+    containerWidth > 0 ? containerWidth / aspect : desktopMax;
+  const finalHeight = Math.max(
+    240,
+    Math.floor(Math.min(desktopMax, heightFromWidth))
+  );
+
+  return (
+    <div
+      ref={wrapRef}
+      className="grid w-full place-items-center overflow-hidden"
+    >
+      {containerWidth > 0 && (
+        <FrameStrip
+          layout={layout}
+          frame={frame}
+          photos={photos.map((p) => p.dataUrl)}
+          height={finalHeight}
+          customBg={customBg}
+        />
+      )}
+    </div>
   );
 }

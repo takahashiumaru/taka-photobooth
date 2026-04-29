@@ -81,4 +81,3 @@ dilakukan di local canvas — foto tidak pernah keluar dari browser.
 - [x] Camera permission handling friendly
 - [x] Smooth animations & transitions
 - [x] Privacy-first (client-side only)
-# taka-photobooth

@@ -117,7 +117,7 @@ export async function renderStrip(opts: {
   const titleY = innerTop + innerH + gap;
   const titleText = layout.stripTitle ?? "Takaphotobooth";
   const year = new Date().getFullYear();
-  const tagText = `${year} · ${layout.inchW}×${layout.inchH}`;
+  const tagText = `${year}`;
 
   let titleSize = Math.round(H * 0.034);
   let tagSize = Math.max(8, Math.round(H * 0.018));

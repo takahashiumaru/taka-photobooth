@@ -54,15 +54,17 @@ export default function HomePage() {
         </section>
 
         {/* Layouts band */}
-        <section id="layouts" className="py-10">
-          <div className="mb-6 flex items-end justify-between">
-            <div>
-              <span className="eyebrow">Step one</span>
-              <h2 className="display-h2 mt-2">Choose your layout</h2>
+        <section id="layouts" className="py-8 sm:py-10">
+          <div className="mb-5 sm:mb-6 flex items-end justify-between gap-3">
+            <div className="min-w-0">
+              <span className="eyebrow text-[10px] sm:text-xs">Step one</span>
+              <h2 className="display-h2 mt-1.5 sm:mt-2 text-[26px] sm:text-5xl leading-[1.1]">
+                Choose your layout
+              </h2>
             </div>
             <Link
               href="/layout"
-              className="text-sm font-medium text-plum-700 underline-offset-4 hover:underline"
+              className="shrink-0 text-xs sm:text-sm font-medium text-plum-700 underline-offset-4 hover:underline"
             >
               See all →
             </Link>
@@ -102,11 +104,13 @@ export default function HomePage() {
         </section>
 
         {/* Frame band */}
-        <section className="py-10">
-          <div className="mb-6 flex items-end justify-between">
-            <div>
-              <span className="eyebrow">Step four</span>
-              <h2 className="display-h2 mt-2">Frame it. Make it yours.</h2>
+        <section className="py-8 sm:py-10">
+          <div className="mb-5 sm:mb-6 flex items-end justify-between gap-3">
+            <div className="min-w-0">
+              <span className="eyebrow text-[10px] sm:text-xs">Step four</span>
+              <h2 className="display-h2 mt-1.5 sm:mt-2 text-[26px] sm:text-5xl leading-[1.1]">
+                Frame it. Make it yours.
+              </h2>
             </div>
           </div>
           <div className="no-scrollbar -mx-1 flex gap-3 overflow-x-auto px-1 pb-2">

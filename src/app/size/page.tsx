@@ -38,16 +38,18 @@ function Inner() {
   return (
     <>
       <Header />
-      <main className="mx-auto max-w-6xl px-5 pb-24 pt-2">
-        <div className="py-6">
+      <main className="mx-auto max-w-6xl px-3 sm:px-5 pb-24 pt-2">
+        <div className="py-3 sm:py-6">
           <Stepper current={2} />
         </div>
 
-        <div className="mb-8 text-center">
-          <span className="eyebrow">Step 2 of 5</span>
-          <h1 className="display-h2 mt-3">Pick a size</h1>
-          <p className="mx-auto mt-2 max-w-md text-sm text-ink/60">
-            We default to the natural size of the {layout.name}. Choose a different one if you want.
+        <div className="mb-5 sm:mb-8 text-center px-3">
+          <span className="eyebrow text-[10px] sm:text-xs">Step 2 of 5</span>
+          <h1 className="display-h2 mt-3 sm:mt-4 text-[28px] sm:text-5xl leading-[1.1]">
+            Pick a size
+          </h1>
+          <p className="mx-auto mt-2 sm:mt-3 max-w-[20rem] sm:max-w-md text-[13px] sm:text-sm leading-relaxed text-ink/60">
+            We default to the natural size of the {layout.name}.
           </p>
         </div>
 

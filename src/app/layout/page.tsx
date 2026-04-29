@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import clsx from "clsx";
 import { Header } from "@/components/Header";
@@ -10,6 +10,7 @@ import { FRAMES, getFrame } from "@/lib/frames";
 import { FrameStrip } from "@/components/FrameStrip";
 import { usePhotoBooth } from "@/lib/store";
 import { HydrationGate } from "@/components/HydrationGate";
+import type { LayoutDef, FrameDef } from "@/lib/types";
 
 export default function LayoutPage() {
   return (
@@ -44,11 +45,14 @@ function Inner() {
           <Stepper current={1} />
         </div>
 
-        <div className="mb-4 sm:mb-8 text-center px-2">
+        <div className="mb-5 sm:mb-10 text-center px-3">
           <span className="eyebrow text-[10px] sm:text-xs">Step 1 of 5</span>
-          <h1 className="display-h2 mt-2 sm:mt-3 text-3xl sm:text-5xl">Choose your layout</h1>
-          <p className="mx-auto mt-1 sm:mt-2 max-w-md text-xs sm:text-sm text-ink/60">
-            Pick the strip or grid that fits the moment. You can pair it with any frame later.
+          <h1 className="display-h2 mt-3 sm:mt-4 text-[28px] sm:text-5xl leading-[1.1]">
+            Choose your layout
+          </h1>
+          <p className="mx-auto mt-2 sm:mt-3 max-w-[20rem] sm:max-w-md text-[13px] sm:text-sm leading-relaxed text-ink/60">
+            Pick the strip or grid that fits the moment.
+            <span className="hidden sm:inline"> You can pair it with any frame later.</span>
           </p>
         </div>
 
@@ -81,21 +85,26 @@ function Inner() {
 
                 <div
                   className={clsx(
-                    "relative grid h-[180px] sm:h-[280px] place-items-center rounded-xl sm:rounded-2xl bg-gradient-to-br p-2 sm:p-4",
+                    "relative grid h-[220px] sm:h-[280px] w-full place-items-center overflow-hidden rounded-xl sm:rounded-2xl bg-gradient-to-br p-2 sm:p-4",
                     l.accent
                   )}
                 >
-                  <ResponsivePreview layout={l} frame={previewFrame} />
+                  <ResponsivePreview
+                    layout={l}
+                    frame={previewFrame}
+                    maxHeight={l.kind === "strip" ? 210 : 200}
+                  />
                 </div>
 
-                <div className="flex items-end justify-between">
-                  <div className="min-w-0">
-                    <p className="font-display text-base sm:text-2xl italic font-light truncate">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="min-w-0 flex-1">
+                    <p className="font-display text-lg sm:text-2xl italic font-light truncate">
                       {l.name}
                     </p>
                     <p className="hidden sm:block text-sm text-ink/60">{l.description}</p>
-                    <p className="mt-0.5 sm:mt-1 text-[10px] sm:text-xs text-ink/50">
-                      {l.poses} pose · {l.inchW}×{l.inchH} {l.kind === "strip" ? "Strip" : "Grid"}
+                    <p className="mt-0.5 sm:mt-1 truncate text-[10px] sm:text-xs text-ink/50">
+                      {l.poses} pose · {l.inchW}×{l.inchH}{" "}
+                      {l.kind === "strip" ? "Strip" : "Grid"}
                     </p>
                   </div>
                   <div
@@ -160,32 +169,58 @@ function Arrow() {
   );
 }
 
+interface ResponsivePreviewProps {
+  layout: LayoutDef;
+  frame: FrameDef;
+  /** Maximum height the panel can offer (px). The actual height is clamped
+   * so that `width = height * (inchW / inchH)` never exceeds the available
+   * container width — this is what keeps Layout G (6×6 square) and the
+   * 4×6 grid from overflowing the card on small phones. */
+  maxHeight: number;
+}
+
+/**
+ * Renders a sample FrameStrip whose pixel size auto-fits the parent column.
+ * Uses a ResizeObserver so the preview always fits — no more clipping when
+ * the card is narrower than the strip's natural aspect ratio.
+ */
 function ResponsivePreview({
   layout,
   frame,
-}: {
-  layout: import("@/lib/types").LayoutDef;
-  frame: import("@/lib/types").FrameDef;
-}) {
-  const [h, setH] = useState(layout.kind === "strip" ? 150 : 130);
+  maxHeight,
+}: ResponsivePreviewProps) {
+  const wrapRef = useRef<HTMLDivElement | null>(null);
+  const [containerWidth, setContainerWidth] = useState<number>(0);
+
   useEffect(() => {
-    const update = () => {
-      const small = window.matchMedia("(max-width: 639px)").matches;
-      setH(small ? (layout.kind === "strip" ? 150 : 130) : 250);
-    };
-    update();
-    window.addEventListener("resize", update);
-    return () => window.removeEventListener("resize", update);
-  }, [layout.kind]);
+    const el = wrapRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver((entries) => {
+      for (const e of entries) {
+        const w = e.contentRect.width;
+        if (w > 0) setContainerWidth(w);
+      }
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  const aspect = layout.inchW / layout.inchH;
+  // Width derived from height; clamp height so width fits the container.
+  const heightFromWidth = containerWidth > 0 ? containerWidth / aspect : maxHeight;
+  const finalHeight = Math.max(80, Math.floor(Math.min(maxHeight, heightFromWidth)));
+
   return (
-    <div className="mx-auto block" style={{ width: "fit-content" }}>
-      <FrameStrip
-        layout={layout}
-        frame={frame}
-        photos={Array(layout.poses).fill(null)}
-        height={h}
-        sample
-      />
+    <div ref={wrapRef} className="grid w-full place-items-center">
+      {containerWidth > 0 && (
+        <FrameStrip
+          layout={layout}
+          frame={frame}
+          photos={Array(layout.poses).fill(null)}
+          height={finalHeight}
+          sample
+        />
+      )}
     </div>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import clsx from "clsx";
 import { Header } from "@/components/Header";
@@ -11,6 +11,8 @@ import { FrameStrip } from "@/components/FrameStrip";
 import { CustomBackgroundPanel } from "@/components/CustomBackgroundPanel";
 import { usePhotoBooth } from "@/lib/store";
 import { HydrationGate } from "@/components/HydrationGate";
+import type { LayoutDef, FrameDef, CapturedPhoto } from "@/lib/types";
+import type { CustomBg } from "@/lib/store";
 
 const CATEGORIES = ["All", "Classic", "Decorative", "Themed"] as const;
 type Cat = (typeof CATEGORIES)[number];
@@ -55,15 +57,17 @@ function Inner() {
   return (
     <>
       <Header />
-      <main className="mx-auto max-w-6xl px-5 pb-24 pt-2">
-        <div className="py-6">
+      <main className="mx-auto max-w-6xl px-3 sm:px-5 pb-24 pt-2">
+        <div className="py-3 sm:py-6">
           <Stepper current={4} />
         </div>
 
-        <div className="mb-6 text-center">
-          <span className="eyebrow">Step 4 of 5</span>
-          <h1 className="display-h2 mt-2">Choose a frame</h1>
-          <p className="mx-auto mt-2 max-w-md text-sm text-ink/60">
+        <div className="mb-5 sm:mb-6 text-center px-3">
+          <span className="eyebrow text-[10px] sm:text-xs">Step 4 of 5</span>
+          <h1 className="display-h2 mt-3 sm:mt-4 text-[28px] sm:text-5xl leading-[1.1]">
+            Choose a frame
+          </h1>
+          <p className="mx-auto mt-2 sm:mt-3 max-w-[20rem] sm:max-w-md text-[13px] sm:text-sm leading-relaxed text-ink/60">
             Swap frames freely — your photos stay locked in.
           </p>
         </div>
@@ -71,20 +75,17 @@ function Inner() {
         <div className="grid gap-6 lg:grid-cols-[1fr_1.2fr]">
           {/* Preview + custom panel */}
           <div className="space-y-4 lg:sticky lg:top-24 lg:self-start">
-            <div className="glass p-6">
-              <div className="flex items-center justify-center">
-                <FrameStrip
-                  layout={layout}
-                  frame={frame}
-                  photos={photos.map((p) => p.dataUrl)}
-                  height={layout.kind === "strip" ? 560 : 420}
-                  customBg={customBg}
-                />
-              </div>
-              <p className="mt-4 text-center font-display text-xl italic">
+            <div className="glass p-3 sm:p-6">
+              <FluidFrameStrip
+                layout={layout}
+                frame={frame}
+                photos={photos}
+                customBg={customBg}
+              />
+              <p className="mt-3 sm:mt-4 text-center font-display text-lg sm:text-xl italic">
                 {frame.name}
               </p>
-              <p className="text-center text-xs uppercase tracking-[0.18em] text-ink/55">
+              <p className="text-center text-[10px] sm:text-xs uppercase tracking-[0.18em] text-ink/55">
                 {frame.category}
               </p>
             </div>
@@ -176,6 +177,67 @@ function ArrowRight() {
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
       <path d="M5 12h14M13 6l6 6-6 6" />
     </svg>
+  );
+}
+
+interface FluidFrameStripProps {
+  layout: LayoutDef;
+  frame: FrameDef;
+  photos: CapturedPhoto[];
+  customBg: CustomBg;
+}
+
+/**
+ * Renders the FrameStrip preview at a height that always fits the parent
+ * column. Uses a ResizeObserver so portrait strips stay tall on desktop
+ * while square 6×6 grids never overflow the card on narrow phones.
+ */
+function FluidFrameStrip({
+  layout,
+  frame,
+  photos,
+  customBg,
+}: FluidFrameStripProps) {
+  const wrapRef = useRef<HTMLDivElement | null>(null);
+  const [containerWidth, setContainerWidth] = useState<number>(0);
+
+  useEffect(() => {
+    const el = wrapRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver((entries) => {
+      for (const e of entries) {
+        const w = e.contentRect.width;
+        if (w > 0) setContainerWidth(w);
+      }
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  const aspect = layout.inchW / layout.inchH;
+  const desktopMax = layout.kind === "strip" ? 560 : 420;
+  const heightFromWidth =
+    containerWidth > 0 ? containerWidth / aspect : desktopMax;
+  const finalHeight = Math.max(
+    220,
+    Math.floor(Math.min(desktopMax, heightFromWidth))
+  );
+
+  return (
+    <div
+      ref={wrapRef}
+      className="grid w-full place-items-center overflow-hidden"
+    >
+      {containerWidth > 0 && (
+        <FrameStrip
+          layout={layout}
+          frame={frame}
+          photos={photos.map((p) => p.dataUrl)}
+          height={finalHeight}
+          customBg={customBg}
+        />
+      )}
+    </div>
   );
 }
 function ArrowLeft() {
