@@ -17,9 +17,69 @@ const fraunces = Fraunces({
 });
 
 export const metadata: Metadata = {
-  title: "Taka photobooth — Premium Photobooth in your browser",
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_APP_URL || "https://taka-photobooth.vercel.app"
+  ),
+  title: {
+    default: "Taka Photobooth | Premium Online Browser Photobooth",
+    template: "%s | Taka Photobooth",
+  },
   description:
-    "A modern, in-browser photobooth. Pick a layout, snap your shots, choose a frame, and download a print-ready memory.",
+    "Experience a modern, aesthetic in-browser photobooth. Pick a layout, snap your shots, apply beautiful frames, and download print-ready high-quality photo strips instantly without installing anything.",
+  keywords: [
+    "photobooth",
+    "online photobooth",
+    "browser photobooth",
+    "photo strip",
+    "virtual photobooth",
+    "webcam photobooth",
+    "photo frame",
+    "instant photo",
+    "photo booth app",
+  ],
+  authors: [{ name: "Taka" }],
+  creator: "Taka",
+  publisher: "Taka Photobooth",
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
+  openGraph: {
+    title: "Taka Photobooth — Premium Online Photobooth",
+    description:
+      "A modern, in-browser photobooth. Snap your shots, choose beautiful frames, and download print-ready memories instantly.",
+    url: "https://taka-photobooth.vercel.app",
+    siteName: "Taka Photobooth",
+    images: [
+      {
+        url: "/logo-256.png", // Replace with a real OG image if available
+        width: 800,
+        height: 600,
+        alt: "Taka Photobooth Preview",
+      },
+    ],
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Taka Photobooth — Premium Online Photobooth",
+    description:
+      "A modern, in-browser photobooth. Snap your shots, choose beautiful frames, and download print-ready memories instantly.",
+    images: ["/logo-256.png"], // Replace with a real OG image if available
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
   icons: {
     icon: [
       { url: "/favicon.png", type: "image/png" },
