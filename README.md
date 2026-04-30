@@ -1,5 +1,7 @@
 # Takaphotobooth — Premium In-Browser Photobooth
 
+![Takaphotobooth Preview](photobooth.png)
+
 Aplikasi photobooth web modern berbasis **Next.js 14 (App Router) + TypeScript + Tailwind + Zustand**.
 Dibangun dari PRD PhotoBooth dengan UI premium (terinspirasi dari photobooth-io.cc).
 
